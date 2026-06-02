@@ -1,0 +1,92 @@
+# CMake
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cpack*.tar*
+ctest*.log
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# CMake FetchContent deps
+_deps/
+
+# C++ build artifacts
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.exp
+
+# Compiled modules (DLT Viewer plugins)
+*.ko
+plugin/*.so
+
+# IDE: CLion
+.idea/
+*.iml
+*.iws
+*.ipr
+*.iqws
+
+# IDE: Visual Studio
+*.sln
+*.suo
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sdf
+*.opendb
+*.sln.docstates
+vs*/
+ipch/
+
+# IDE: VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/c_cpp_properties.json
+
+# IDE: Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.rcp
+*.log
+.project
+.cproject
+.settings/
+.loadpath
+.recommenders/
+
+# IDE: Qt Creator
+*.creator
+*.creator.user
+
+# IDE: KDevelop
+.kdevelop/
+
+# OS
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# CTest
+CTestTestfile.cmake

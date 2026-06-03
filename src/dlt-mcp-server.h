@@ -58,6 +58,7 @@ public:
     QStringList infoConfig() override;
 
     QSettings* settings() const { return settings_.get(); }
+    bool isServerRunning() const { return server_->is_running(); }
 
     /* QDltPluginViewerInterface */
     QWidget* initViewer() override;

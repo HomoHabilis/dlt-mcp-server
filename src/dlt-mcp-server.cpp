@@ -46,8 +46,7 @@ bool DltMcpServer::saveConfig(QString /*filename*/) { return true; }
 QStringList DltMcpServer::infoConfig() { return {}; }
 
 QWidget* DltMcpServer::initViewer() {
-    dashboard_ = new Dashboard();
-    dashboard_->setSettings(settings_.get());
+    dashboard_ = new Dashboard(settings_.get(), this);
     connect(dashboard_, &Dashboard::openSettings, this, [this]() {
         SettingsDialog dialog(settings_.get(), nullptr);
         dialog.exec();

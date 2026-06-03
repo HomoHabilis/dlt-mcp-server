@@ -7,6 +7,7 @@
  */
 
 #include "dashboard.h"
+#include "dlt-mcp-server.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -14,20 +15,25 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSettings>
+#include <QTimer>
 #include <QVBoxLayout>
 
 #include <filesystem>
 
-Dashboard::Dashboard(QWidget* parent)
+Dashboard::Dashboard(QSettings* settings, DltMcpServer* server, QWidget* parent)
     : QWidget(parent),
+      settings_(settings),
+      server_(server),
       statusLabel_(new QLabel(this)),
       contextWarningLabel_(new QLabel(this)),
       sseCopyBtn_(new QPushButton("Copy SSE URL", this)),
       httpCopyBtn_(new QPushButton("Copy Streamable HTTP URL", this)),
       settingsBtn_(new QPushButton("Settings...", this)) {
 
+    port_ = settings_->value(PortKey, DefaultPort).toInt();
+
     statusLabel_->setText(
-        QString("<b>MCP Server: localhost:%1</b><br>Running").arg(DefaultPort));
+        QString("<b>MCP Server: localhost:%1</b><br>Running").arg(port_));
     statusLabel_->setStyleSheet("color: #4caf50; font-size: 14px;");
     statusLabel_->setAlignment(Qt::AlignCenter);
 
@@ -67,13 +73,8 @@ Dashboard::Dashboard(QWidget* parent)
     });
 
     connect(settingsBtn_, &QPushButton::clicked, this, &Dashboard::openSettings);
-}
 
-void Dashboard::setSettings(QSettings* settings) {
-    settings_ = settings;
-    port_ = settings_->value(PortKey, DefaultPort).toInt();
-    statusLabel_->setText(
-        QString("<b>MCP Server: localhost:%1</b><br>Running").arg(port_));
+    QTimer::singleShot(500, this, &Dashboard::checkServerStatus);
     updateContextWarning();
 }
 
@@ -104,6 +105,13 @@ void Dashboard::updateContextWarning() {
         contextWarningLabel_->setVisible(true);
     } else {
         contextWarningLabel_->setVisible(false);
+    }
+}
+
+void Dashboard::checkServerStatus() {
+    if (server_ && !server_->isServerRunning()) {
+        statusLabel_->setText("<b>MCP Server failed to start</b><br>Port may be busy");
+        statusLabel_->setStyleSheet("color: #f44336; font-size: 14px;");
     }
 }
 

@@ -12,6 +12,7 @@
 #include "config.h"
 #include <QWidget>
 
+class DltMcpServer;
 class QLabel;
 class QPushButton;
 class QSettings;
@@ -20,10 +21,8 @@ class Dashboard : public QWidget {
     Q_OBJECT
 
   public:
-    explicit Dashboard(QWidget* parent = nullptr);
+    explicit Dashboard(QSettings* settings, DltMcpServer* server, QWidget* parent = nullptr);
     ~Dashboard() override = default;
-
-    void setSettings(QSettings* settings);
 
   signals:
     void openSettings();
@@ -34,13 +33,15 @@ class Dashboard : public QWidget {
 
   private:
     void updateContextWarning();
+    void checkServerStatus();
 
+    QSettings* settings_ = nullptr;
+    DltMcpServer* server_ = nullptr;
     QLabel* statusLabel_;
     QLabel* contextWarningLabel_;
     QPushButton* sseCopyBtn_;
     QPushButton* httpCopyBtn_;
     QPushButton* settingsBtn_;
-    QSettings* settings_ = nullptr;
     int port_ = DefaultPort;
     int restoreTimerId_ = 0;
     QPushButton* pressedBtn_ = nullptr;

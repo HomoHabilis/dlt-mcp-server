@@ -48,7 +48,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 FetchContent_MakeAvailable(md4c)
 add_library(md4c::md4c-html ALIAS md4c-html)
 
-add_library(dlt-mcp-server MODULE src/dlt-mcp-server.cpp src/dashboard.cpp src/settings-dialog.cpp)
+add_library(dlt-mcp-server MODULE src/dlt-mcp-server.cpp src/dashboard.cpp src/report-cache.cpp src/settings-dialog.cpp)
 
 target_compile_definitions(dlt-mcp-server PRIVATE DLT_VIEWER_PLUGIN_VERSION="${PLUGIN_VERSION}")
 

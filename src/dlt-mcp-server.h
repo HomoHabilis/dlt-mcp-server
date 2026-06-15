@@ -23,6 +23,7 @@
 
 #include "dashboard.h"
 #include "plugininterface.h"
+#include "report-cache.h"
 
 #ifndef DLT_VIEWER_PLUGIN_VERSION
 #define DLT_VIEWER_PLUGIN_VERSION "0.0.0"
@@ -213,6 +214,12 @@ class DltMcpServer : public QObject,
   std::string context_file_content_;
 
   std::vector<LogFileInfo> file_ranges_;
+
+  std::unique_ptr<ReportCache> reportCache_;
+
+  bool is_live_{false};
+
+  std::string buildReportKey();
 };
 
 #endif  // DLT_MCP_SERVER_H_

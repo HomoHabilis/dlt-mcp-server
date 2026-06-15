@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Persistent disk cache for reports in JSON format (stored in Qt cache location).
 - `set_report` MCP tool to display Markdown reports in the plugin widget.
 - Report tab with clickable `[text](jump://msg/<id>)` links that jump DLT Viewer to specific messages.
 - Plugin will now detect and display if the server cannot be started (e.g. port is busy).

@@ -10,6 +10,8 @@
 
 #include <mcp_message.h>
 
+#include <QStandardPaths>
+
 #include "settings-dialog.h"
 
 Q_LOGGING_CATEGORY(logDltMcpServer, "dlt.mcp.server", QtDebugMsg)
@@ -20,13 +22,18 @@ Q_LOGGING_CATEGORY(logDltMcpServer, "dlt.mcp.server", QtDebugMsg)
 #include <climits>
 #include <filesystem>
 #include <fstream>
+#include <map>
+#include <set>
 #include <sstream>
 
 DltMcpServer::DltMcpServer() {
   settings_ =
       std::make_unique<QSettings>("MyCompany", "DLTViewer_DltMcpServer");
-  dashboard_ = nullptr;
-  dlt_file_ = nullptr;
+  auto cacheDir =
+      QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+  std::filesystem::path cachePath(cacheDir.toStdString());
+  cachePath /= "dlt-mcp-server/reports.json";
+  reportCache_ = std::make_unique<ReportCache>(cachePath.string());
   initMcpServer();
   registerMcpTools();
   server_->start(false);
@@ -70,8 +77,11 @@ bool DltMcpServer::initConnections(QStringList /*list*/) { return true; }
 bool DltMcpServer::controlMsg(int /*index*/, QDltMsg& /*msg*/) { return true; }
 
 bool DltMcpServer::stateChanged(
-    int /*index*/, QDltConnection::QDltConnectionState /*connectionState*/,
+    int /*index*/, QDltConnection::QDltConnectionState connectionState,
     QString /*hostname*/) {
+  if (connectionState == QDltConnection::QDltConnectionOffline) {
+    is_live_ = false;
+  }
   return true;
 }
 
@@ -101,6 +111,7 @@ void DltMcpServer::selectedIdxMsg(int /*index*/, QDltMsg& /*msg*/) {}
 void DltMcpServer::initFileStart(QDltFile* file) {
   reset();
   dlt_file_ = file;
+  is_live_ = false;
 }
 
 void DltMcpServer::initMsg(int /*index*/, QDltMsg& /*msg*/) {}
@@ -113,12 +124,22 @@ void DltMcpServer::initFileFinish() {
   computeFileRanges();
   if (dlt_file_ && dlt_file_->size() > 0) {
     emit fileCountChanged(file_ranges_.size());
+    auto key = buildReportKey();
+    if (!key.empty() && dashboard_) {
+      std::string cached = reportCache_->get(key);
+      if (!cached.empty()) {
+        QMetaObject::invokeMethod(
+            dashboard_,
+            [dash = dashboard_, cached]() { dash->setReport(cached); },
+            Qt::QueuedConnection);
+      }
+    }
   } else {
     emit fileCountChanged(0);
   }
 }
 
-void DltMcpServer::updateFileStart() {}
+void DltMcpServer::updateFileStart() { is_live_ = true; }
 
 void DltMcpServer::updateMsg(int /*index*/, QDltMsg& /*msg*/) {}
 
@@ -148,6 +169,24 @@ void DltMcpServer::reset() {
   distribution_.clear();
   log_levels_.clear();
   file_ranges_.clear();
+}
+
+std::string DltMcpServer::buildReportKey() {
+  if (file_ranges_.empty()) {
+    return {};
+  }
+
+  std::string names;
+  int totalCount = 0;
+  for (const auto& info : file_ranges_) {
+    if (!names.empty()) {
+      names += "+";
+    }
+    names += std::filesystem::path(info.name).filename().string();
+    totalCount += info.message_count;
+  }
+  names += ":" + std::to_string(totalCount);
+  return names;
 }
 
 void DltMcpServer::onMessageReceived(int index, const QDltMsg& msg) {
@@ -849,6 +888,12 @@ mcp::json DltMcpServer::set_report(const mcp::json& params,
                              "markdown parameter is required");
   }
   std::string markdown = params["markdown"].get<std::string>();
+  if (!markdown.empty() && !is_live_) {
+    auto key = buildReportKey();
+    if (!key.empty()) {
+      reportCache_->put(key, markdown);
+    }
+  }
   QMetaObject::invokeMethod(
       dashboard_,
       [dash = dashboard_, markdown]() {

@@ -113,6 +113,10 @@ void DltMcpServer::initFileStart(QDltFile* file) {
   reset();
   dlt_file_ = file;
   is_live_ = false;
+  if (dashboard_) {
+    QMetaObject::invokeMethod(dashboard_, &Dashboard::clearReport,
+                              Qt::QueuedConnection);
+  }
 }
 
 void DltMcpServer::initMsg(int /*index*/, QDltMsg& /*msg*/) {}

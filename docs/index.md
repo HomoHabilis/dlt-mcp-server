@@ -10,9 +10,9 @@ description: Bring AI-driven log analysis to the COVESA DLT Viewer via the Model
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/Ulenspiegel/dlt-mcp-server)
 
-A plugin for the **COVESA DLT Viewer** that exposes Diagnostic Log and Trace (DLT) log data via the **Model Context Protocol (MCP)**, allowing AI agents and MCP-compatible clients to directly query, search, and retrieve information from your DLT log files.
+A plugin for the **COVESA DLT Viewer** that exposes AUTOSAR Diagnostic Log and Trace (DLT) log data via the **Model Context Protocol (MCP)**, allowing AI agents and MCP-compatible clients to search and retrieve information directly from your DLT log files.
 
-[View Source on GitHub](https://github.com/Ulenspiegel/dlt-mcp-server) � [Report an Issue](https://github.com/Ulenspiegel/dlt-mcp-server/issues)
+[View Source on GitHub](https://github.com/Ulenspiegel/dlt-mcp-server) &bull; [Report an Issue](https://github.com/Ulenspiegel/dlt-mcp-server/issues)
 
 ---
 

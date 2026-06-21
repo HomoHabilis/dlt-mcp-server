@@ -147,7 +147,7 @@ class DltMcpServer : public QObject,
   size_t getEcuidIndex(const std::string& ecuid);
 
   char getLevelChar(int level);
-  static std::string cleanPayload(const QString& payload);
+  static std::string cleanPayload(const std::string& payload);
 
   int64_t getBaseTimestamp();
 

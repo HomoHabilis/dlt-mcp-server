@@ -1,6 +1,7 @@
 # DLT MCP Server Plugin
 
-[![Website](https://img.shields.io/badge/Website-dlt--mcp--server-blue)](https://ulenspiegel.github.io/dlt-mcp-server/) [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![Website](https://img.shields.io/badge/Website-DLT_MCP_Server-blue)](https://ulenspiegel.github.io/dlt-mcp-server/)
 
 A plugin for DLT Viewer that exposes DLT log analysis capabilities via the Model Context Protocol (MCP). It allows AI agents and MCP-compatible clients to query and retrieve information from DLT log files.
 

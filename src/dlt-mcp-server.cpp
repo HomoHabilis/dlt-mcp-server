@@ -268,12 +268,12 @@ char DltMcpServer::getLevelChar(int level) {
   return '?';
 }
 
-std::string DltMcpServer::cleanPayload(const QString& payload) {
+std::string DltMcpServer::cleanPayload(const std::string& payload) {
   std::string result;
   result.reserve(payload.size());
-  for (QChar c : payload) {
+  for (char c : payload) {
     if (c != '\0' && c != '\n' && c != '\r') {
-      result += static_cast<char>(c.unicode());
+      result += c;
     }
   }
   return result;
@@ -736,7 +736,7 @@ mcp::json DltMcpServer::search(const mcp::json& params,
     // Fetch full payload.
     QDltMsg msg;
     if (!dlt_file_->getMsg(m.msg_index, msg)) continue;
-    QString payload = msg.toStringPayload();
+    std::string payload = msg.toStringPayload().toStdString();
 
     int64_t offset_ns = m.timestamp - base_ts;
     auto [hours, minutes, seconds, millis] = splitRelativeTime(offset_ns);
@@ -808,7 +808,7 @@ mcp::json DltMcpServer::get_messages(const mcp::json& params,
     int64_t ecu_time = getEcuTimeTicks(msg);
 
     // Payload with cleanup.
-    QString payload = msg.toStringPayload();
+    std::string payload = msg.toStringPayload().toStdString();
 
     int64_t offset_ns = timestamp - base_ts;
     auto [hours, minutes, seconds, millis] = splitRelativeTime(offset_ns);
@@ -860,7 +860,7 @@ mcp::json DltMcpServer::get_selection(const mcp::json& /*params*/,
   auto [ecu_sec, ecu_mmm] = splitEcuTime(ecu_time);
 
   // Payload with cleanup, no truncation.
-  QString payload = msg.toStringPayload();
+  std::string payload = msg.toStringPayload().toStdString();
 
   std::ostringstream oss;
   oss << formatMessageLine(

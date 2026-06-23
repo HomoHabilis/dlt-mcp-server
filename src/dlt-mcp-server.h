@@ -67,10 +67,10 @@ class DltMcpServer : public QObject,
   void initFileStart(QDltFile* file) override;
   void initFileFinish() override;
   void initMsg(int index, QDltMsg& msg) override;
-  void initMsgDecoded(int index, QDltMsg& msg) override;
+  void initMsgDecoded(int index, QDltMsg& message) override;
   void updateFileStart() override;
   void updateMsg(int index, QDltMsg& msg) override;
-  void updateMsgDecoded(int index, QDltMsg& msg) override;
+  void updateMsgDecoded(int index, QDltMsg& message) override;
   void updateFileFinish() override;
   void selectedIdxMsg(int index, QDltMsg& msg) override;
   void selectedIdxMsgDecoded(int index, QDltMsg& msg) override;
@@ -102,7 +102,7 @@ class DltMcpServer : public QObject,
   };
 
   void reset();
-  void onMessageReceived(int index, const QDltMsg& msg);
+  void onMessageReceived(int index, const QDltMsg& message);
 
   std::optional<QDltMsg> get(int index) const override;
 
@@ -122,7 +122,7 @@ class DltMcpServer : public QObject,
   static mcp::json makeTextResult(const std::string& text,
                                   const std::string& warning = "");
 
-  static bool looksLikeRegex(const std::string& s);
+  static bool looksLikeRegex(const std::string& input);
 
   void initMcpServer();
   void registerMcpTools();

@@ -78,7 +78,9 @@ bool DltMcpServer::initControl(QDltControl* control) {
 
 bool DltMcpServer::initConnections(QStringList /*list*/) { return true; }
 
-bool DltMcpServer::controlMsg(int /*index*/, QDltMsg& /*msg*/) { return true; }
+bool DltMcpServer::controlMsg(int /*index*/, QDltMsg& /*message*/) {
+  return true;
+}
 
 bool DltMcpServer::stateChanged(
     int /*index*/, QDltConnection::QDltConnectionState connectionState,
@@ -106,11 +108,11 @@ QWidget* DltMcpServer::initViewer() {
   return dashboard_;
 }
 
-void DltMcpServer::selectedIdxMsgDecoded(int index, QDltMsg& /*msg*/) {
+void DltMcpServer::selectedIdxMsgDecoded(int index, QDltMsg& /*message*/) {
   selected_index_ = index;
 }
 
-void DltMcpServer::selectedIdxMsg(int /*index*/, QDltMsg& /*msg*/) {}
+void DltMcpServer::selectedIdxMsg(int /*index*/, QDltMsg& /*message*/) {}
 
 void DltMcpServer::initFileStart(QDltFile* file) {
   reset();
@@ -122,10 +124,10 @@ void DltMcpServer::initFileStart(QDltFile* file) {
   }
 }
 
-void DltMcpServer::initMsg(int /*index*/, QDltMsg& /*msg*/) {}
+void DltMcpServer::initMsg(int /*index*/, QDltMsg& /*message*/) {}
 
-void DltMcpServer::initMsgDecoded(int index, QDltMsg& msg) {
-  onMessageReceived(index, msg);
+void DltMcpServer::initMsgDecoded(int index, QDltMsg& message) {
+  onMessageReceived(index, message);
 }
 
 void DltMcpServer::initFileFinish() {
@@ -149,19 +151,19 @@ void DltMcpServer::initFileFinish() {
 
 void DltMcpServer::updateFileStart() { is_live_ = true; }
 
-void DltMcpServer::updateMsg(int /*index*/, QDltMsg& /*msg*/) {}
+void DltMcpServer::updateMsg(int /*index*/, QDltMsg& /*message*/) {}
 
-void DltMcpServer::updateMsgDecoded(int index, QDltMsg& msg) {
-  onMessageReceived(index, msg);
+void DltMcpServer::updateMsgDecoded(int index, QDltMsg& message) {
+  onMessageReceived(index, message);
 }
 
 void DltMcpServer::updateFileFinish() { liveUpdateLastFileMessageCount(); }
 
-bool DltMcpServer::isMsg(QDltMsg& /*msg*/, int /*triggeredByUser*/) {
+bool DltMcpServer::isMsg(QDltMsg& /*message*/, int /*triggeredByUser*/) {
   return false;
 }
 
-bool DltMcpServer::decodeMsg(QDltMsg& /*msg*/, int /*triggeredByUser*/) {
+bool DltMcpServer::decodeMsg(QDltMsg& /*message*/, int /*triggeredByUser*/) {
   return false;
 }
 
@@ -190,21 +192,21 @@ std::string DltMcpServer::buildReportKey() {
   return names;
 }
 
-void DltMcpServer::onMessageReceived(int index, const QDltMsg& msg) {
-  if (msg.getType() != QDltMsg::DltTypeLog) {
+void DltMcpServer::onMessageReceived(int index, const QDltMsg& message) {
+  if (message.getType() != QDltMsg::DltTypeLog) {
     return;
   }
-  index_->add(index, msg);
-  statistics_.update(msg);
+  index_->add(index, message);
+  statistics_.update(message);
 }
 
 std::optional<QDltMsg> DltMcpServer::get(int index) const {
   if (!dlt_file_) {
     return std::nullopt;
   }
-  QDltMsg msg;
-  if (dlt_file_->getMsg(index, msg)) {
-    return msg;
+  QDltMsg message;
+  if (dlt_file_->getMsg(index, message)) {
+    return message;
   }
   return std::nullopt;
 }
@@ -256,13 +258,13 @@ std::string DltMcpServer::formatMessageLine(
       relUsec, ecuSec, ecuMmm);
 }
 
-bool DltMcpServer::looksLikeRegex(const std::string& s) {
+bool DltMcpServer::looksLikeRegex(const std::string& input) {
   static constexpr char kMetaChars[] = "*+?^$[]";
-  for (const char c : s) {
+  for (const char c : input) {
     if (strchr(kMetaChars, c)) return true;
   }
-  for (size_t i = 0; i + 1 < s.size(); ++i) {
-    if (s[i] == '\\' && strchr("dwWsSb", s[i + 1])) return true;
+  for (size_t i = 0; i + 1 < input.size(); ++i) {
+    if (input[i] == '\\' && strchr("dwWsSb", input[i + 1])) return true;
   }
   return false;
 }
@@ -413,11 +415,12 @@ mcp::json DltMcpServer::get_log_summary(const mcp::json& /*params*/,
   double duration_sec = (last_ts - first_ts) / 1'000'000'000.0;
 
   // Wall-clock start time for context.
-  QDltMsg first_msg;
-  dlt_file_->getMsg(0, first_msg);
+  QDltMsg first_message;
+  dlt_file_->getMsg(0, first_message);
   std::string log_start = fmt::format(
-      "{}.{:06}", first_msg.getGmTimeWithOffsetString(0, false).toStdString(),
-      first_msg.getMicroseconds());
+      "{}.{:06}",
+      first_message.getGmTimeWithOffsetString(0, false).toStdString(),
+      first_message.getMicroseconds());
 
   mcp::json log_levels = mcp::json::array();
   for (const auto& level : statistics_.log_levels()) {
@@ -686,31 +689,31 @@ mcp::json DltMcpServer::get_messages(const mcp::json& params,
   size_t count = 0;
 
   for (const auto& id_json : ids) {
-    int msg_index = id_json.get<int>();
+    int message_index = id_json.get<int>();
 
-    QDltMsg msg;
-    if (!dlt_file_->getMsg(msg_index, msg)) {
+    QDltMsg message;
+    if (!dlt_file_->getMsg(message_index, message)) {
       continue;
     }
 
     // Extract metadata from message.
-    std::string ctid_str = msg.getCtid().toStdString();
-    std::string apid_str = msg.getApid().toStdString();
-    int level = msg.getSubtype();
-    int64_t timestamp = getWallClockNs(msg);
-    int64_t ecu_time = getEcuTimeTicks(msg);
+    std::string ctid_str = message.getCtid().toStdString();
+    std::string apid_str = message.getApid().toStdString();
+    int level = message.getSubtype();
+    int64_t timestamp = getWallClockNs(message);
+    int64_t ecu_time = getEcuTimeTicks(message);
 
     // Payload with cleanup.
-    std::string payload = msg.toStringPayload().toStdString();
+    std::string payload = message.toStringPayload().toStdString();
 
     int64_t offset_ns = timestamp - base_ts;
     auto [hours, minutes, seconds, millis] = splitRelativeTime(offset_ns);
     auto [rel_sec, rel_usec] = splitRelativeTimestamp(offset_ns);
     auto [ecu_sec, ecu_mmm] = splitEcuTime(ecu_time);
 
-    oss << formatMessageLine(hours, minutes, seconds, millis,
-                             getLevelChar(level), ctid_str, apid_str, msg_index,
-                             rel_sec, rel_usec, ecu_sec, ecu_mmm);
+    oss << formatMessageLine(
+        hours, minutes, seconds, millis, getLevelChar(level), ctid_str,
+        apid_str, message_index, rel_sec, rel_usec, ecu_sec, ecu_mmm);
 
     // Full payload (no truncation).
     oss << cleanPayload(payload);
@@ -737,14 +740,14 @@ mcp::json DltMcpServer::get_selection(const mcp::json& /*params*/,
                              "DLT file is not loaded");
   }
 
-  QDltMsg msg;
-  if (!dlt_file_->getMsg(selected_index_, msg)) {
+  QDltMsg message;
+  if (!dlt_file_->getMsg(selected_index_, message)) {
     throw mcp::mcp_exception(mcp::error_code::internal_error,
                              "Failed to retrieve selected message");
   }
 
-  int64_t timestamp = getWallClockNs(msg);
-  int64_t ecu_time = getEcuTimeTicks(msg);
+  int64_t timestamp = getWallClockNs(message);
+  int64_t ecu_time = getEcuTimeTicks(message);
 
   int64_t base_ts = index_->firstTimestamp();
   int64_t offset_ns = timestamp - base_ts;
@@ -753,13 +756,13 @@ mcp::json DltMcpServer::get_selection(const mcp::json& /*params*/,
   auto [ecu_sec, ecu_mmm] = splitEcuTime(ecu_time);
 
   // Payload with cleanup, no truncation.
-  std::string payload = msg.toStringPayload().toStdString();
+  std::string payload = message.toStringPayload().toStdString();
 
   std::ostringstream oss;
   oss << formatMessageLine(
-      hours, minutes, seconds, millis, getLevelChar(msg.getSubtype()),
-      msg.getCtid().toStdString(), msg.getApid().toStdString(), selected_index_,
-      rel_sec, rel_usec, ecu_sec, ecu_mmm);
+      hours, minutes, seconds, millis, getLevelChar(message.getSubtype()),
+      message.getCtid().toStdString(), message.getApid().toStdString(),
+      selected_index_, rel_sec, rel_usec, ecu_sec, ecu_mmm);
 
   // Full payload (no truncation).
   oss << cleanPayload(payload);

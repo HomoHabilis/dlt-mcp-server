@@ -79,10 +79,10 @@ void BasicIndex::search(const Query& params,
       auto message = source_.get(idx);
       if (!message) continue;
       QString payload = message->toStringPayload();
-      Qt::CaseSensitivity cs =
+      Qt::CaseSensitivity case_sensitivity =
           params.case_insensitive ? Qt::CaseInsensitive : Qt::CaseSensitive;
       QString keyword = QString::fromStdString(*params.keyword);
-      if (!payload.contains(keyword, cs)) continue;
+      if (!payload.contains(keyword, case_sensitivity)) continue;
     }
 
     auto dlt_message = source_.get(idx);

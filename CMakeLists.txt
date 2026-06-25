@@ -68,7 +68,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
-add_library(dlt-mcp-server MODULE src/dlt-mcp-server.cpp src/dashboard.cpp src/report-cache.cpp src/settings-dialog.cpp src/basic_index.cpp)
+add_library(dlt-mcp-server MODULE src/dlt-mcp-server.cpp src/dashboard.cpp src/report-cache.cpp src/settings-dialog.cpp src/basic_index.cpp src/bloom_filter.cpp)
 
 target_include_directories(dlt-mcp-server PRIVATE src)
 

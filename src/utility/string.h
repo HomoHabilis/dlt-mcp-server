@@ -9,7 +9,11 @@
 #ifndef DLT_MCP_SERVER_UTILITY_STRING_H_
 #define DLT_MCP_SERVER_UTILITY_STRING_H_
 
+#include <QString>
+#include <algorithm>
+#include <cctype>
 #include <string>
+#include <string_view>
 
 inline std::string cleanPayload(const std::string& payload) {
   std::string result;
@@ -28,6 +32,25 @@ inline std::string payloadPreview(const std::string& payload,
     return payload.substr(0, maxLen) + "~";
   }
   return payload;
+}
+
+inline bool isAscii(std::string_view text) {
+  return std::all_of(text.begin(), text.end(),
+                     [](unsigned char c) { return c < 0x80; });
+}
+
+inline std::string toLowerCase(std::string_view text) {
+  if (isAscii(text)) {
+    std::string result(text);
+    for (char& c : result) {
+      c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return result;
+  }
+  return QString::fromUtf8(text.data(), static_cast<int>(text.size()))
+      .toLower()
+      .toUtf8()
+      .toStdString();
 }
 
 #endif  // DLT_MCP_SERVER_UTILITY_STRING_H_

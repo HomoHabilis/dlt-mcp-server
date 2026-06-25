@@ -635,8 +635,9 @@ mcp::json DltMcpServer::search(const mcp::json& params,
     query.case_insensitive = case_insensitive;
   }
 
-  spd::info("Query: {}", query);
-  auto search_start = std::chrono::steady_clock::now();
+  uint32_t current_query_id = query_id_.fetch_add(1);
+  spd::info("Query #{:08x}: {}", current_query_id, query);
+  auto request_start = std::chrono::steady_clock::now();
 
   int matches_count = 0;
   int matches_skipped = 0;
@@ -644,43 +645,50 @@ mcp::json DltMcpServer::search(const mcp::json& params,
   std::string regex_warning;
   std::ostringstream result;
   int64_t first_ts = index_->firstTimestamp();
+  std::chrono::steady_clock::time_point search_start;
 
-  index_->search(query, [&](const Message& message) {
-    if (matches_skipped < offset) {
-      matches_skipped++;
-      return true;
-    }
-    if (!count_only && matches_collected >= limit) {
-      return false;
-    }
-
-    if (count_only) {
-      matches_count++;
-    } else {
-      if (matches_collected > 0) {
-        result << "\n";
+  {
+    std::lock_guard<std::mutex> lock(search_mutex_);
+    search_start = std::chrono::steady_clock::now();
+    index_->search(query, [&](const Message& message) {
+      if (matches_skipped < offset) {
+        matches_skipped++;
+        return true;
       }
-      int64_t offset_ns = message.timestamp - first_ts;
-      auto [hours, minutes, seconds, millis] = splitRelativeTime(offset_ns);
-      auto [rel_sec, rel_usec] = splitRelativeTimestamp(offset_ns);
-      auto [ecu_sec, ecu_mmm] = splitEcuTime(message.ecu_time);
+      if (!count_only && matches_collected >= limit) {
+        return false;
+      }
 
-      result << formatMessageLine(hours, minutes, seconds, millis,
-                                  getLevelChar(message.log_level), message.ctid,
-                                  message.apid, message.index, rel_sec,
-                                  rel_usec, ecu_sec, ecu_mmm);
+      if (count_only) {
+        matches_count++;
+      } else {
+        if (matches_collected > 0) {
+          result << "\n";
+        }
+        int64_t offset_ns = message.timestamp - first_ts;
+        auto [hours, minutes, seconds, millis] = splitRelativeTime(offset_ns);
+        auto [rel_sec, rel_usec] = splitRelativeTimestamp(offset_ns);
+        auto [ecu_sec, ecu_mmm] = splitEcuTime(message.ecu_time);
 
-      result << payloadPreview(cleanPayload(message.payload));
-      matches_collected++;
-    }
-    return true;
-  });
+        result << formatMessageLine(hours, minutes, seconds, millis,
+                                    getLevelChar(message.log_level),
+                                    message.ctid, message.apid, message.index,
+                                    rel_sec, rel_usec, ecu_sec, ecu_mmm);
 
-  auto search_end = std::chrono::steady_clock::now();
-  auto duration_ms =
-      std::chrono::duration<double, std::milli>(search_end - search_start)
-          .count();
-  spd::info("Search completed in {:.1f}ms", duration_ms);
+        result << payloadPreview(cleanPayload(message.payload));
+        matches_collected++;
+      }
+      return true;
+    });
+  }
+
+  auto now = std::chrono::steady_clock::now();
+  double request_time =
+      std::chrono::duration<double, std::milli>(now - request_start).count();
+  double search_time =
+      std::chrono::duration<double, std::milli>(now - search_start).count();
+  spd::info("Search #{:08x} completed in {:.1f}ms (search: {:.1f}ms)",
+            current_query_id, request_time, search_time);
 
   int total_count =
       count_only ? matches_count : matches_collected + matches_skipped;

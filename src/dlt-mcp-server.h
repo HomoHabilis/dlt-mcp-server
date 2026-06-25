@@ -14,7 +14,9 @@
 
 #include <QObject>
 #include <QSettings>
+#include <atomic>
 #include <memory>
+#include <mutex>
 
 #include "dashboard.h"
 #include "index.h"
@@ -155,6 +157,8 @@ class DltMcpServer : public QObject,
 
   std::unique_ptr<ReportCache> reportCache_;
 
+  std::mutex search_mutex_;
+  std::atomic<uint32_t> query_id_{0};
   bool is_live_{false};
 
   std::string buildReportKey();

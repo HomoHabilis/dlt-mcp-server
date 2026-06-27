@@ -169,8 +169,8 @@ void DltMcpServer::initFileFinish() {
       if (!reports.empty()) {
         QMetaObject::invokeMethod(
             dashboard_,
-            [dash = dashboard_, content = reports.front().content]() {
-              dash->setReport(content);
+            [dash = dashboard_, report = reports.front()]() {
+              dash->showReport(report);
             },
             Qt::QueuedConnection);
       }
@@ -842,16 +842,24 @@ mcp::json DltMcpServer::set_report(const mcp::json& params,
   }
   std::string markdown = params["markdown"].get<std::string>();
   std::string title = params.value("title", std::string{});
+  ReportStorage::Report reportToShow;
   if (!markdown.empty() && !is_live_ && !file_ranges_.empty()) {
     auto [file_paths, per_file_counts] = buildReportIdentity();
     reportStorage_->put(file_paths, per_file_counts, title, markdown);
     emit reportListChanged();
+    auto reports = reportStorage_->list(
+        ReportStorage::Filter{file_paths, per_file_counts});
+    if (!reports.empty()) {
+      reportToShow = reports.front();
+    }
   }
   QMetaObject::invokeMethod(
       dashboard_,
-      [dash = dashboard_, markdown]() {
+      [dash = dashboard_, markdown, report = std::move(reportToShow)]() {
         if (markdown.empty()) {
           dash->clearReport();
+        } else if (!report.content.empty()) {
+          dash->showReport(report);
         } else {
           dash->setReport(markdown);
         }

@@ -12,6 +12,7 @@
 #include <QWidget>
 
 #include "config.h"
+#include "report-storage.h"
 
 class DltMcpServer;
 class QLabel;
@@ -37,6 +38,7 @@ class Dashboard : public QWidget {
  public slots:
   void setReport(const std::string& markdown);
   void setReportTitle(const std::string& title);
+  void showReport(const ReportStorage::Report& report);
   void clearReport();
   void jumpToMessage(int index);
 

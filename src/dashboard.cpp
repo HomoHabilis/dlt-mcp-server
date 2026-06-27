@@ -99,11 +99,7 @@ Dashboard::Dashboard(QSettings* settings, DltMcpServer* server, QWidget* parent)
 
   connect(reportBrowserWidget_, &ReportBrowserWidget::reportSelected, this,
           [this](int row) {
-            auto& report = reportBrowserWidget_->reportAt(row);
-            setReport(report.content);
-            setReportTitle(report.title);
-            currentReportHash_ = report.hash;
-            updateReportMismatch();
+            showReport(reportBrowserWidget_->reportAt(row));
           });
 
   connect(reportBrowserWidget_, &ReportBrowserWidget::deleteSelected, this,
@@ -280,6 +276,13 @@ void Dashboard::setReportTitle(const std::string& title) {
   } else {
     reportHeaderWidget_->setTitle(QString::fromStdString(title));
   }
+}
+
+void Dashboard::showReport(const ReportStorage::Report& report) {
+  setReport(report.content);
+  setReportTitle(report.title);
+  currentReportHash_ = report.hash;
+  updateReportMismatch();
 }
 
 void Dashboard::clearReport() {

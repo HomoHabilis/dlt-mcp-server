@@ -36,6 +36,8 @@ class ReportStorage {
     std::vector<int> per_file_counts;
   };
 
+  static std::string computeFilterHash(const Filter& filter);
+
   explicit ReportStorage(const std::string& dir_path);
 
   void put(const std::vector<std::string>& file_paths,
@@ -48,9 +50,12 @@ class ReportStorage {
 
  private:
   using Reports = bmi::multi_index_container<
-      Report, bmi::indexed_by<bmi::ordered_unique<bmi::composite_key<
-                  Report, bmi::member<Report, std::string, &Report::hash>,
-                  bmi::member<Report, int64_t, &Report::timestamp>>>>>;
+      Report, bmi::indexed_by<
+                  bmi::ordered_unique<bmi::composite_key<
+                      Report, bmi::member<Report, std::string, &Report::hash>,
+                      bmi::member<Report, int64_t, &Report::timestamp>>>,
+                  bmi::ordered_non_unique<
+                      bmi::member<Report, int64_t, &Report::timestamp>>>>;
 
   void load();
   std::optional<Report> loadReport(const std::string& stem);

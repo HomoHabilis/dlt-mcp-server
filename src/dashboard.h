@@ -17,9 +17,14 @@ class DltMcpServer;
 class QLabel;
 class QPushButton;
 class QSettings;
+class QSplitter;
 class QTabWidget;
 class QTextBrowser;
+class QToolButton;
 class QUrl;
+
+class ReportBrowserWidget;
+class ReportHeaderWidget;
 
 class Dashboard : public QWidget {
   Q_OBJECT
@@ -31,6 +36,7 @@ class Dashboard : public QWidget {
 
  public slots:
   void setReport(const std::string& markdown);
+  void setReportTitle(const std::string& title);
   void clearReport();
   void jumpToMessage(int index);
 
@@ -43,14 +49,19 @@ class Dashboard : public QWidget {
 
  private:
   void onAnchorClicked(const QUrl& url);
+  void toggleReportBrowser();
   void updateContextWarning();
   void checkServerStatus();
   void updateFileCount(int count);
+  void updateReportMismatch();
 
   QSettings* settings_ = nullptr;
   DltMcpServer* server_ = nullptr;
   QTabWidget* tabWidget_;
   QTextBrowser* reportBrowser_;
+  QSplitter* reportSplitter_;
+  ReportBrowserWidget* reportBrowserWidget_;
+  ReportHeaderWidget* reportHeaderWidget_;
   QLabel* statusLabel_;
   QLabel* portLabel_;
   QLabel* fileCountLabel_;
@@ -62,6 +73,7 @@ class Dashboard : public QWidget {
   int restoreTimerId_ = 0;
   QPushButton* pressedBtn_ = nullptr;
   QString originalText_;
+  std::string currentReportHash_;
 };
 
 #endif  // DASHBOARD_H

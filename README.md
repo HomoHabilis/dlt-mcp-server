@@ -12,6 +12,7 @@ A plugin for DLT Viewer that exposes DLT log analysis capabilities via the Model
 - **Message Retrieval** – Fetch full payload for specific message IDs.
 - **Selection** – Get details of the currently selected message in DLT Viewer.
 - **Report** – Display Markdown reports in the plugin widget with clickable links that navigate DLT Viewer's log window to specific messages.
+- **History** – Browse, view and manage generated reports in a report browser pane. Reports are persisted across sessions and matched against loaded file(s).
 
 ## Requirements
 

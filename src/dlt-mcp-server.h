@@ -45,6 +45,7 @@ class DltMcpServer : public QObject,
 
  signals:
   void fileCountChanged(int count);
+  void reportListChanged();
 
  public:
   DltMcpServer();
@@ -62,6 +63,10 @@ class DltMcpServer : public QObject,
 
   QSettings* settings() const { return settings_.get(); }
   bool isServerRunning() const { return server_->is_running(); }
+  std::shared_ptr<ReportStorage> reportStorage() const {
+    return reportStorage_;
+  }
+  ReportStorage::Filter buildReportFilter() const;
   void jumpToMessage(int index);
 
   /* QDltPluginViewerInterface */
@@ -155,7 +160,7 @@ class DltMcpServer : public QObject,
 
   std::vector<LogFileInfo> file_ranges_;
 
-  std::unique_ptr<ReportStorage> reportStorage_;
+  std::shared_ptr<ReportStorage> reportStorage_;
 
   std::mutex search_mutex_;
   std::atomic<uint32_t> query_id_{0};

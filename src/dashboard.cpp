@@ -17,6 +17,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSettings>
+#include <QSplitter>
 #include <QTabWidget>
 #include <QTextBrowser>
 #include <QTimer>
@@ -26,6 +27,9 @@
 #include <string>
 
 #include "dlt-mcp-server.h"
+#include "report-browser.h"
+#include "report-header.h"
+#include "report-table-model.h"
 
 namespace spd = spdlog;
 
@@ -46,6 +50,8 @@ Dashboard::Dashboard(QSettings* settings, DltMcpServer* server, QWidget* parent)
       server_(server),
       tabWidget_(new QTabWidget(this)),
       reportBrowser_(new QTextBrowser(this)),
+      reportSplitter_(new QSplitter(Qt::Horizontal, this)),
+      reportBrowserWidget_(new ReportBrowserWidget(this)),
       statusLabel_(new QLabel(this)),
       portLabel_(new QLabel(this)),
       fileCountLabel_(new QLabel(this)),
@@ -61,7 +67,68 @@ Dashboard::Dashboard(QSettings* settings, DltMcpServer* server, QWidget* parent)
   reportBrowser_->setPlaceholderText("No report generated");
   connect(reportBrowser_, &QTextBrowser::anchorClicked, this,
           &Dashboard::onAnchorClicked);
-  tabWidget_->addTab(reportBrowser_, "Report");
+
+  // Header widget with toggle button + report title
+  reportHeaderWidget_ = new ReportHeaderWidget(this);
+  connect(reportHeaderWidget_, &ReportHeaderWidget::toggleClicked, this,
+          &Dashboard::toggleReportBrowser);
+
+  // Splitter: browser widget (collapsed) + report content
+  reportSplitter_->addWidget(reportBrowserWidget_);
+  reportSplitter_->addWidget(reportBrowser_);
+  reportSplitter_->setStretchFactor(0, 0);
+  reportSplitter_->setStretchFactor(1, 1);
+  reportSplitter_->setSizes({0, 1});
+
+  // Wire report browser
+  auto* reportModel = reportBrowserWidget_->model();
+  reportModel->init(server_->reportStorage());
+
+  connect(server_, &DltMcpServer::reportListChanged, this, [this]() {
+    reportBrowserWidget_->refreshTableModel(
+        server_->buildReportFilter(), reportBrowserWidget_->isFilterChecked());
+    updateReportMismatch();
+  });
+
+  connect(reportBrowserWidget_, &ReportBrowserWidget::filterToggled, this,
+          [this](bool) {
+            reportBrowserWidget_->refreshTableModel(
+                server_->buildReportFilter(),
+                reportBrowserWidget_->isFilterChecked());
+          });
+
+  connect(reportBrowserWidget_, &ReportBrowserWidget::reportSelected, this,
+          [this](int row) {
+            auto& report = reportBrowserWidget_->reportAt(row);
+            setReport(report.content);
+            setReportTitle(report.title);
+            currentReportHash_ = report.hash;
+            updateReportMismatch();
+          });
+
+  connect(reportBrowserWidget_, &ReportBrowserWidget::deleteSelected, this,
+          [this]() {
+            int row = reportBrowserWidget_->selectedRow();
+            if (row < 0) return;
+            auto& report = reportBrowserWidget_->reportAt(row);
+            server_->reportStorage()->remove(report);
+            emit server_->reportListChanged();
+          });
+
+  // Initial populate (filter checkbox is checked by default)
+  reportBrowserWidget_->refreshTableModel(
+      server_->buildReportFilter(), reportBrowserWidget_->isFilterChecked());
+
+  // Report tab layout: header on top, splitter below
+  auto* reportTabLayout = new QVBoxLayout();
+  reportTabLayout->setContentsMargins(0, 0, 0, 0);
+  reportTabLayout->setSpacing(0);
+  reportTabLayout->addWidget(reportHeaderWidget_);
+  reportTabLayout->addWidget(reportSplitter_, 1);
+
+  auto* reportTabWidget = new QWidget(this);
+  reportTabWidget->setLayout(reportTabLayout);
+  tabWidget_->addTab(reportTabWidget, "Report");
 
   // Status labels
   statusLabel_->setText("Starting...");
@@ -151,6 +218,20 @@ void Dashboard::updateContextWarning() {
   }
 }
 
+void Dashboard::toggleReportBrowser() {
+  auto sizes = reportSplitter_->sizes();
+  bool isVisible = sizes[0] > 0;
+
+  if (isVisible) {
+    reportSplitter_->setSizes({0, sizes[1]});
+    reportHeaderWidget_->setToggleArrow("▶");
+  } else {
+    int defaultWidth = qMin(250, width() / 2);
+    reportSplitter_->setSizes({defaultWidth, width() - defaultWidth});
+    reportHeaderWidget_->setToggleArrow("◀");
+  }
+}
+
 void Dashboard::checkServerStatus() {
   if (server_ && server_->isServerRunning()) {
     statusLabel_->setText("Running");
@@ -169,6 +250,16 @@ void Dashboard::updateFileCount(int count) {
   }
 }
 
+void Dashboard::updateReportMismatch() {
+  if (currentReportHash_.empty()) {
+    reportHeaderWidget_->setMismatch(false);
+  } else {
+    auto filter = server_->buildReportFilter();
+    std::string filterHash = ReportStorage::computeFilterHash(filter);
+    reportHeaderWidget_->setMismatch(currentReportHash_ != filterHash);
+  }
+}
+
 void Dashboard::timerEvent(QTimerEvent* ev) {
   if (ev->timerId() == restoreTimerId_ && pressedBtn_) {
     pressedBtn_->setText(originalText_);
@@ -183,7 +274,20 @@ void Dashboard::setReport(const std::string& markdown) {
   reportBrowser_->setHtml(QString::fromUtf8(html.data(), html.size()));
 }
 
-void Dashboard::clearReport() { reportBrowser_->clear(); }
+void Dashboard::setReportTitle(const std::string& title) {
+  if (title.empty()) {
+    reportHeaderWidget_->setTitle("Untitled");
+  } else {
+    reportHeaderWidget_->setTitle(QString::fromStdString(title));
+  }
+}
+
+void Dashboard::clearReport() {
+  reportBrowser_->clear();
+  reportHeaderWidget_->setTitle("No report");
+  currentReportHash_.clear();
+  updateReportMismatch();
+}
 
 void Dashboard::onAnchorClicked(const QUrl& url) {
   if (url.scheme() != "jump" || url.authority() != "msg") {

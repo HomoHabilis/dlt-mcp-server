@@ -84,7 +84,20 @@ if (GTest_FOUND)
     add_dependencies(mcp-test test_bloom_filter)
 endif ()
 
-add_library(dlt-mcp-server MODULE src/dlt-mcp-server.cpp src/dashboard.cpp src/report-cache.cpp src/report-storage.cpp src/settings-dialog.cpp src/basic_index.cpp src/bloom_filter.cpp src/ngram_index.cpp)
+add_library(
+    dlt-mcp-server MODULE
+    src/basic_index.cpp
+    src/bloom_filter.cpp
+    src/dashboard.cpp
+    src/dlt-mcp-server.cpp
+    src/ngram_index.cpp
+    src/report-browser.cpp
+    src/report-cache.cpp
+    src/report-header.cpp
+    src/report-storage.cpp
+    src/report-table-model.cpp
+    src/settings-dialog.cpp
+)
 
 target_include_directories(dlt-mcp-server PRIVATE src)
 

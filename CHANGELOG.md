@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Status label reflects actual server state (Starting/Running/Failed).
 - Added `title` argument to `set_report` MCP tool.
 - Introduced new on-disk report storage format, avoiding single file database and separating metadata from content.
+- Saved report browser - view, filter, load and delete saved reports.
 
 ### Changed
 - Bloom filter block size reduced from 2000 to 500 messages to counter repetitive trigram matches.

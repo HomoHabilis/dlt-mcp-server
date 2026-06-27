@@ -59,13 +59,17 @@ std::optional<BaseName> parseBaseName(const std::string& stem) {
     return std::nullopt;
   }
   try {
-    return BaseName{hash, std::stoll(timestamp)};
+    return BaseName{hash, std::stoll(timestamp, nullptr, 16)};
   } catch (...) {
     return std::nullopt;
   }
 }
 
 }  // namespace
+
+std::string ReportStorage::computeFilterHash(const Filter& filter) {
+  return makeHash(filter.file_paths, filter.per_file_counts);
+}
 
 void to_json(json& j, const ReportStorage::Report& r) {
   j = {{"file_paths", r.file_paths},
@@ -257,7 +261,8 @@ std::vector<ReportStorage::Report> ReportStorage::list(
       result.push_back(*--report);
     }
   } else {
-    for (auto report = reports_.rbegin(); report != reports_.rend(); ++report) {
+    auto& byTime = reports_.get<1>();
+    for (auto report = byTime.rbegin(); report != byTime.rend(); ++report) {
       result.push_back(*report);
     }
   }

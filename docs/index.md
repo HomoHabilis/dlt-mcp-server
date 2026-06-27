@@ -31,7 +31,7 @@ A plugin for the **COVESA DLT Viewer** that exposes AUTOSAR Diagnostic Log and T
 * **Selection:** Allow the AI agent to read details of the currently selected message in your DLT Viewer window.
 * **Context File:** Provide a context file with any instructions you'd like to provide to your AI agent.
 * **Interactive Reporting:** Generate and display formatted Markdown reports in the plugin widget. Includes clickable links that navigate the main DLT Viewer log window to exact messages.
-* **Persistence:** Most recently generated reports are persisted and automatically loaded alongside the matching DLT file.
+* **Persistence:** Generated reports are persisted and automatically loaded alongside the matching DLT file or collection of files. Report browser lets you view and manage your report history.
 
 ---
 

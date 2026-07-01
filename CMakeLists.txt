@@ -9,16 +9,6 @@ find_package(Boost 1.74 REQUIRED)
 find_package(Git QUIET)
 find_package(GTest QUIET)
 
-# Dependencies below are vendored as git submodules (under external/) rather than
-# fetched via FetchContent, so that Dependabot can track and propose updates to
-# them (see .github/dependabot.yml, package-ecosystem "gitsubmodule").
-if (GIT_FOUND)
-    execute_process(
-            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-endif ()
-
 set(FMT_HEADER_ONLY ON CACHE BOOL "" FORCE)
 add_subdirectory(external/fmt)
 add_library(fmt::fmt ALIAS fmt)

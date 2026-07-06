@@ -35,7 +35,7 @@ cd dlt-viewer
 Clone this plugin into the plugin directory:
 
 ```bash
-git clone https://github.com/Ulenspiegel/dlt-mcp-server.git plugin/dlt-mcp-server
+git clone --recursive https://github.com/Ulenspiegel/dlt-mcp-server.git plugin/dlt-mcp-server
 ```
 
 Add the following line to `plugin/CMakeLists.txt`:

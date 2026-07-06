@@ -58,12 +58,17 @@ if (GTest_FOUND)
     target_link_libraries(test_bloom_filter PRIVATE GTest::gtest_main ${QT_PREFIX}::Core)
     add_test(NAME mcp-test_bloom_filter COMMAND $<TARGET_FILE:test_bloom_filter>)
 
+    add_executable(test_utilities test/test_utilities.cpp)
+    target_include_directories(test_utilities PRIVATE src)
+    target_link_libraries(test_utilities PRIVATE GTest::gtest_main ${QT_PREFIX}::Core)
+    add_test(NAME mcp-test_utilities COMMAND $<TARGET_FILE:test_utilities>)
+
     add_custom_target(mcp-test
             COMMAND ${CMAKE_CTEST_COMMAND} -R mcp-test_
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Running all mcp plugin tests"
             VERBATIM)
-    add_dependencies(mcp-test test_bloom_filter)
+    add_dependencies(mcp-test test_bloom_filter test_utilities)
 endif ()
 
 add_library(

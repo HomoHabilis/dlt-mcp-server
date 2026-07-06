@@ -21,13 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `title` argument to `set_report` MCP tool.
 - Introduced new on-disk report storage format, avoiding single file database and separating metadata from content.
 - Saved report browser - view, filter, load and delete saved reports.
+- Test coverage for hash functions and `cleanPayload`.
 
 ### Changed
 - Bloom filter block size reduced from 2000 to 500 messages to counter repetitive trigram matches.
 - Filter size lineup: Small (8KB), Normal (16KB), Large (32KB) with updated memory estimates.
 - Settings dialog redesigned with grouped layout, inline hints, and file existence validation.
 - Replaced Qt logging with spdlog for better syntax and output format.
-- Replaced dependency on system libfmt with FetchContent.
+- Move dependencies to submodules and pin them at fixed commit hashes. (@HomoHabilis)
+- Prevent the report browser from loading external links. (@HomoHabilis)
+- Create a dependabot config file. (@HomoHabilis)
 
 ### Fixed
 - NgramIndex constructor bug where filter_ was nullptr and index always reverted to full-text search.
@@ -38,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 - Minor formatting changes in README.md
+
+### Contributors
+- @HomoHabilis
 
 ## [0.1.0] - 2026-06-02
 
